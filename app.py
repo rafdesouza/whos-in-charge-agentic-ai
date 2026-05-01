@@ -1,5 +1,6 @@
+import os
 import streamlit as st
-from agent.building_agent import is_configured
+from agent.building_agent import get_mode
 
 st.set_page_config(
     page_title="Who's Really in Charge?",
@@ -70,14 +71,26 @@ It's to keep them genuinely in charge of what matters.
 with col2:
     st.markdown("### Setup Status")
 
-    if is_configured():
+    mode = get_mode()
+    if mode == "ollama":
+        model = os.getenv("LOCAL_MODEL", "").strip()
+        st.success(f"Ollama connected — running `{model}` locally")
+    elif mode == "azure":
         st.success("Azure OpenAI connected — live AI mode active")
     else:
         st.warning("Running in demo mode")
         st.markdown("""
 Pre-computed decisions are loaded for all 10 events.
-To enable live Azure OpenAI:
 
+**Option A — Local model (Ollama, no cloud needed):**
+```bash
+# 1. Install Ollama: https://ollama.com
+ollama pull llama3.2
+# 2. Add to .env:
+LOCAL_MODEL=llama3.2
+```
+
+**Option B — Azure OpenAI:**
 ```bash
 cp .env.example .env
 # Fill in your Azure credentials

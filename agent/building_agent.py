@@ -2,7 +2,9 @@ import os
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from langchain_openai import AzureChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.language_models import BaseChatModel
 
 from agent.events import BuildingEvent
 
@@ -141,32 +143,49 @@ _DEMO_DECISIONS = {
 }
 
 
+def get_mode() -> str:
+    """Return the active backend: 'ollama', 'azure', or 'demo'."""
+    if os.getenv("LOCAL_MODEL", "").strip():
+        return "ollama"
+    if os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"):
+        return "azure"
+    return "demo"
+
+
 def is_configured() -> bool:
-    return bool(os.getenv("AZURE_OPENAI_ENDPOINT") and os.getenv("AZURE_OPENAI_API_KEY"))
+    return get_mode() != "demo"
 
 
-def assess_event(event: BuildingEvent) -> AgentDecision:
-    """Assess a building event and return a routing decision with confidence score."""
-    if not is_configured():
-        data = _DEMO_DECISIONS.get(event.id)
-        if data:
-            return AgentDecision(**data)
-        return AgentDecision(
-            action_summary="Event assessed — demo mode active",
-            confidence=50,
-            reasoning="Azure OpenAI credentials not configured. Add your credentials to .env to enable live AI assessment.",
-            recommended_action="Configure AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY in your .env file.",
-            auto_handle=True,
-            escalation_context="",
-        )
-
-    llm = AzureChatOpenAI(
+def _build_llm() -> BaseChatModel:
+    mode = get_mode()
+    if mode == "ollama":
+        model = os.getenv("LOCAL_MODEL").strip()
+        return ChatOllama(model=model, temperature=0.1)
+    return AzureChatOpenAI(
         azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
         api_key=os.getenv("AZURE_OPENAI_API_KEY"),
         api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview"),
         temperature=0.1,
     )
+
+
+def assess_event(event: BuildingEvent) -> AgentDecision:
+    """Assess a building event and return a routing decision with confidence score."""
+    if get_mode() == "demo":
+        data = _DEMO_DECISIONS.get(event.id)
+        if data:
+            return AgentDecision(**data)
+        return AgentDecision(
+            action_summary="Event assessed — demo mode active",
+            confidence=50,
+            reasoning="No model configured. Set LOCAL_MODEL (Ollama) or Azure credentials in .env to enable live AI.",
+            recommended_action="Set LOCAL_MODEL=llama3.2 in .env and run: ollama pull llama3.2",
+            auto_handle=True,
+            escalation_context="",
+        )
+
+    llm = _build_llm()
     structured_llm = llm.with_structured_output(AgentDecision)
     prompt = ChatPromptTemplate.from_messages([
         ("system", SYSTEM_PROMPT),
