@@ -43,67 +43,243 @@ The core mechanism is **confidence scoring**: the agent knows what it doesn't kn
 
 Three ways to get started — pick the one that fits your setup.
 
+---
+
 ### Option 1 — Clone and run locally
 
-```bash
-# Install the GitHub CLI if you don't have it
-winget install --id GitHub.cli      # Windows
-brew install gh                      # macOS
+**What you need:** Python 3.10+, Git, GitHub CLI, a terminal.
 
+**Step 1 — Install the GitHub CLI**
+
+Open a terminal (PowerShell on Windows, Terminal on macOS/Linux) and run:
+
+```bash
+# Windows
+winget install --id GitHub.cli
+
+# macOS
+brew install gh
+```
+
+Close and reopen the terminal, then confirm it worked:
+
+```bash
+gh --version
+# expected output: gh version 2.x.x
+```
+
+**Step 2 — Authenticate with GitHub**
+
+```bash
 gh auth login
+```
+
+- Select **GitHub.com**
+- Select **HTTPS**
+- Select **Login with a web browser**
+- Copy the one-time code shown, press Enter — your browser opens
+- Paste the code, authorise the app, return to the terminal
+- You should see: `Logged in as <your-username>`
+
+**Step 3 — Clone the repo**
+
+```bash
 gh repo clone rafdesouza/whos-in-charge-agentic-ai
+```
+
+You will see the repo being cloned into a new folder called `whos-in-charge-agentic-ai`.
+
+**Step 4 — Move into the project folder**
+
+```bash
 cd whos-in-charge-agentic-ai
+```
+
+**Step 5 — Install dependencies**
+
+```bash
 pip install -r requirements.txt
+```
+
+This installs Streamlit, LangChain, and everything else the app needs.
+It takes 1–2 minutes on a fresh machine.
+
+**Step 6 — Run the app**
+
+```bash
 streamlit run app.py
 ```
 
-Open `http://localhost:8501`. Runs immediately in **demo mode** — no credentials needed.
+Your browser opens automatically at `http://localhost:8501`.
+The app starts in **demo mode** — pre-computed decisions, no credentials needed.
+Use the sidebar to navigate between the three demo pages.
+
+To stop the app, press `Ctrl + C` in the terminal.
+
+---
 
 ### Option 2 — GitHub Codespaces (zero local setup)
 
-No Python, no pip, no ports. Runs entirely in your browser.
+**What you need:** GitHub CLI installed and authenticated (Steps 1–2 from Option 1). That's it.
+No Python, no pip, no local ports — the environment runs entirely in the cloud.
+
+**Step 1 — Create the Codespace**
 
 ```bash
-gh auth login
 gh codespace create --repo rafdesouza/whos-in-charge-agentic-ai
+```
+
+GitHub spins up a cloud machine pre-configured with Python 3.11.
+You will be prompted to choose a machine type — the default (2-core) is fine.
+The Codespace name is printed when it's ready (e.g. `fuzzy-space-potato-abc123`).
+
+**Step 2 — Open it in VS Code**
+
+```bash
 gh codespace code
 ```
 
-Inside the Codespace terminal — dependencies are already installed:
+If you have VS Code installed, it opens automatically connected to the Codespace.
+If not, add `--web` to open it in the browser:
+
+```bash
+gh codespace code --web
+```
+
+**Step 3 — Run the app**
+
+In the VS Code terminal (`` Ctrl + ` `` to open it), type:
 
 ```bash
 streamlit run app.py --server.headless true
 ```
 
-Port 8501 is forwarded and opens in your browser automatically.
+VS Code detects port 8501 and shows a pop-up: **"Open in Browser"** — click it.
+The app opens in your browser. Done.
+
+**Step 4 — Clean up when finished**
+
+```bash
+gh codespace delete
+```
+
+---
 
 ### Option 3 — Fork and adapt to your own domain
 
+The agent's confidence scoring logic is domain-agnostic. Swap out the building events
+and system prompt, and it works for a hospital, data centre, warehouse — any environment
+where humans and AI share decision-making.
+
+**Step 1 — Fork and clone in one command**
+
 ```bash
 gh repo fork rafdesouza/whos-in-charge-agentic-ai --clone
+```
+
+This creates a copy under your own GitHub account and clones it locally.
+
+**Step 2 — Move into the project folder**
+
+```bash
 cd whos-in-charge-agentic-ai
+```
+
+**Step 3 — Install dependencies**
+
+```bash
 pip install -r requirements.txt
+```
+
+**Step 4 — Swap in your domain events**
+
+Open `agent/events.py` in any editor. Replace or add entries in `SARAHS_DAY`:
+
+```python
+BuildingEvent(
+    id="EVT-011",
+    time="09:30",
+    category=EventCategory.SECURITY,
+    description="Unusual login pattern — admin account, three failed attempts",
+    location="Cloud infrastructure",
+    severity=EventSeverity.HIGH,
+    context={"attempts": 3, "source_ip": "unknown", "account": "svc-admin"},
+)
+```
+
+**Step 5 — Update the agent's domain knowledge**
+
+Open `agent/building_agent.py`. Find `SYSTEM_PROMPT` near the top and replace the
+building management context with your own domain. The confidence scoring bands
+(`0–49 escalate`, `50–79 auto+log`, `80–100 automate`) need no changes.
+
+**Step 6 — Run your version**
+
+```bash
 streamlit run app.py
 ```
 
-Then edit `agent/events.py` to swap in your own domain events, and update the
-`SYSTEM_PROMPT` in `agent/building_agent.py` to match your environment.
-The confidence scoring logic works unchanged across any domain.
-
-### Live AI model (optional)
-
-The demo runs on pre-computed decisions by default. To connect a live model:
+**Step 7 — Push to your fork**
 
 ```bash
-cp .env.example .env   # then fill in your values
+git add .
+git commit -m "adapt to my domain"
+git push
 ```
 
-| Mode | `.env` setting |
-|---|---|
-| **Ollama** (local, offline) | `LOCAL_MODEL=llama3.2` — requires [ollama.com](https://ollama.com) |
-| **Azure OpenAI** (cloud) | `AZURE_OPENAI_ENDPOINT` + `AZURE_OPENAI_API_KEY` |
+Your customised version is now live at `github.com/<your-username>/whos-in-charge-agentic-ai`.
 
-Recommended Ollama models: `llama3.2` (2 GB, fastest), `mistral` (4 GB, best structured output), `phi4` (9 GB, best quality).
+---
+
+### Connect a live AI model (optional for all options)
+
+By default the demo uses pre-computed decisions — it works offline, instantly, with no
+credentials. To connect a real model:
+
+**Step 1 — Copy the environment template**
+
+```bash
+# macOS / Linux
+cp .env.example .env
+
+# Windows PowerShell
+Copy-Item .env.example .env
+```
+
+**Step 2 — Open `.env` in any text editor and fill in your values**
+
+To use a **local model via Ollama:**
+
+1. Install Ollama from [ollama.com](https://ollama.com)
+2. Open a new terminal and run: `ollama pull llama3.2`
+3. In `.env`, set: `LOCAL_MODEL=llama3.2`
+
+To use **Azure OpenAI:**
+
+In `.env`, set:
+```
+AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+AZURE_OPENAI_API_KEY=your-key-here
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_API_VERSION=2024-08-01-preview
+```
+
+**Step 3 — Restart the app**
+
+```bash
+streamlit run app.py
+```
+
+The home page shows which mode is active: **Ollama**, **Azure OpenAI**, or **Demo**.
+
+**Recommended Ollama models:**
+
+| Model | Download size | Notes |
+|---|---|---|
+| `llama3.2` | 2 GB | Fastest, runs on any laptop |
+| `mistral` | 4 GB | Most reliable structured output |
+| `qwen2.5:7b` | 5 GB | Strong reasoning |
+| `phi4` | 9 GB | Best quality |
 
 ---
 
