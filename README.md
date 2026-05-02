@@ -10,6 +10,8 @@ escalate what it doesn't, and preserve human expertise for what genuinely needs 
 Companion repository for the talk by **Rafael Souza** at the
 Microsoft Azure Data Analytics Meetup — Perth, Western Australia.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rafdesouza/whos-in-charge-agentic-ai)
+
 ---
 
 ## The Concept
@@ -184,8 +186,12 @@ To stop the app, press `Ctrl + C` in the terminal.
 
 ### Option 2 — GitHub Codespaces (zero local setup)
 
-**What you need:** GitHub CLI installed and authenticated (Steps 1–2 from Option 1). That's it.
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rafdesouza/whos-in-charge-agentic-ai)
+
+**What you need:** A GitHub account. That's it.
 No Python, no pip, no local ports — the environment runs entirely in the cloud.
+
+Click the button above — or follow the steps below if you prefer the terminal.
 
 **Step 1 — Create the Codespace**
 
