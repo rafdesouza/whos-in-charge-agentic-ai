@@ -5,6 +5,60 @@ implementation choices, trade-offs, and how each piece connects.
 
 ---
 
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  BUILDING EVENT STREAM                   │
+│  sensors · access logs · maintenance requests           │
+└────────────────────────┬────────────────────────────────┘
+                         │  BuildingEvent(id, category,
+                         │    description, severity, context)
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                    BUILDING AGENT                        │
+│                                                          │
+│   ChatPromptTemplate (system + user)                     │
+│              │                                           │
+│              ▼                                           │
+│   BaseChatModel  ◄── AzureChatOpenAI  (cloud)            │
+│   (runtime)      ◄── ChatOllama       (local)            │
+│              │                                           │
+│              ▼  .with_structured_output(AgentDecision)   │
+│   AgentDecision                                          │
+│     • confidence: int   (0–100)                          │
+│     • auto_handle: bool                                  │
+│     • reasoning: str                                     │
+│     • recommended_action: str                            │
+│     • escalation_context: str                            │
+└──────────────────┬──────────────────────────────────────┘
+                   │
+        ┌──────────┴──────────┐
+   confidence ≥ 75       confidence < 50
+        │                     │
+        ▼                     ▼
+┌───────────────┐   ┌─────────────────────────┐
+│  AUTOMATED    │   │  SARAH'S CONSOLE         │
+│  ACTIONS      │   │  • event + context       │
+│               │   │  • agent recommendation  │
+│  logged,      │   │  • decision form         │
+│  no human     │   └────────────┬────────────┘
+│  required     │                │
+└───────────────┘                ▼
+                      ┌─────────────────────┐
+                      │   FEEDBACK LOG      │
+                      │   feedback_log.json │
+                      │                     │
+                      │  event_id           │
+                      │  agent_confidence   │
+                      │  agent_recommendation│
+                      │  sarah_decision     │
+                      │  sarah_accepted (bool)│
+                      └─────────────────────┘
+```
+
+---
+
 ## Data Flow
 
 ```
@@ -360,3 +414,105 @@ Streamlit UI                  Production: React frontend or Teams bot
 
 The agent logic (`building_agent.py`) is production-ready as written.
 The infra around it is what needs to scale.
+
+---
+
+## Extending the Demo
+
+### Add a new building event
+
+```python
+# agent/events.py
+SARAHS_DAY.append(BuildingEvent(
+    id="EVT-011",
+    time="15:30",
+    category=EventCategory.SECURITY,
+    description="Tailgating detected at Level 6 access point",
+    location="Level 6 North Entry",
+    severity=EventSeverity.MEDIUM,
+    context={"camera_id": "CAM-6N-01", "persons_detected": 3, "badge_swipes": 1},
+))
+```
+
+In demo mode, add a matching entry to `_DEMO_DECISIONS` in `building_agent.py`.
+In live mode (Ollama or Azure), the LLM assesses it automatically — no extra code needed.
+
+### Tune the confidence thresholds
+
+Thresholds are applied in `pages/2_AI_In_The_Loop.py`:
+
+```python
+def confidence_label(score: int) -> str:
+    if score >= 75:   return "AUTO"
+    if score >= 50:   return "AUTO + LOG"
+    return "ESCALATE"
+```
+
+The same boundaries are defined in the system prompt in `agent/building_agent.py`.
+Both must be updated together to stay consistent.
+Lower the escalation threshold to be more conservative; raise it to automate more aggressively.
+
+### Plug in a real sensor stream
+
+The agent pipeline is stateless per event. Replace `SARAHS_DAY` with a live generator
+and nothing downstream changes:
+
+```python
+def stream_events(source: str) -> Iterator[BuildingEvent]:
+    # Kafka, Azure Event Hub, MQTT, REST polling — any source
+    for raw in kafka_consumer(source):
+        yield BuildingEvent(
+            id=raw["id"],
+            category=EventCategory(raw["type"]),
+            description=raw["description"],
+            ...
+        )
+```
+
+### Add a new model backend
+
+Any LangChain-compatible `BaseChatModel` slots in via `_build_llm()`:
+
+```python
+# Example: Google Vertex AI
+from langchain_google_vertexai import ChatVertexAI
+
+def _build_llm() -> BaseChatModel:
+    if os.getenv("USE_VERTEX"):
+        return ChatVertexAI(model="gemini-1.5-pro", temperature=0.1)
+    ...
+```
+
+The chain (`prompt | structured_llm`) is unaffected.
+
+---
+
+## Design Decisions
+
+**LLM-generated confidence, not a classifier.**
+A classifier requires labelled training data and retraining when the domain changes.
+An LLM with a well-designed system prompt generalises across event types from day one.
+The trade-off: non-determinism — the same event may score differently across runs.
+For production, cache scores per event fingerprint or use a lower temperature.
+
+**Structured output over text parsing.**
+Free-text LLM responses require brittle extraction logic that breaks on model updates.
+`.with_structured_output(AgentDecision)` delegates schema enforcement to the LangChain
+adapter layer (function calling for OpenAI; JSON mode for Ollama). Failures are
+exceptions, not silent data corruption.
+
+**Pre-computed demo decisions.**
+The demo works fully offline without credentials. The 10 decisions in `_DEMO_DECISIONS`
+were generated by GPT-4o and curated to match the exact confidence levels discussed in
+the talk (EVT-001 at 22%, EVT-005 at 94%, etc.). This makes the demo deterministic
+and presentation-safe regardless of venue WiFi.
+
+**`feedback_log.json` as the simplest viable feedback store.**
+A production system would write to a vector store, a fine-tuning dataset, or an RLHF
+pipeline. For this demo, a local JSON file makes the feedback loop *visible* — the
+audience can open it and read every decision Sarah made. Transparency over engineering.
+
+**Streamlit session state for demo control.**
+All agent state lives in `st.session_state`. Each page is independent and resettable.
+This is intentional: the demo is designed to be run, reset, and run again during a
+live presentation without restarting the server.
