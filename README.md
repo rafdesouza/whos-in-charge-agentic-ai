@@ -207,22 +207,31 @@ You will see a loading screen — wait for it to complete.
 > gh codespace create --repo rafdesouza/whos-in-charge-agentic-ai
 > ```
 
-**Step 2 — Wait for setup to finish**
+**Step 2 — Verify setup completed**
 
 Once the environment loads, you are inside a VS Code editor running in your browser.
 
-At the bottom of the screen you will see a terminal panel running a setup command:
+Dependencies are installed automatically by a `postCreateCommand` that runs in the background.
+It may finish before you even see the editor — you will not always see it running.
 
-```
-Running postCreateCommand: pip install -r requirements.txt...
+Open the terminal to verify everything is ready:
+
+- **Menu:** Terminal → New Terminal
+- **Keyboard:** `` Ctrl + ` `` (backtick)
+
+Then run:
+
+```bash
+pip show streamlit
 ```
 
-Wait for this to complete — it installs all dependencies automatically.
-You will know it is done when the terminal shows a standard prompt again:
+If you see version information, setup is complete. If you see `WARNING: Package(s) not found`, run:
 
+```bash
+pip install -r requirements.txt
 ```
-@your-username ➜ /workspaces/whos-in-charge-agentic-ai $
-```
+
+Wait for it to complete before moving on.
 
 **Step 3 — Open the terminal**
 
