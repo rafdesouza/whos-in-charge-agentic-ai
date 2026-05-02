@@ -8,7 +8,8 @@ that uses LLM-generated confidence scores to route decisions: automate what it k
 escalate what it doesn't, and preserve human expertise for what genuinely needs it.
 
 Companion repository for the talk by **Rafael Souza** at the
-Microsoft Azure Data Analytics Meetup — Perth, Western Australia.
+Perth Global AI Community AgentCamp held in Perth, Western Australia on 02/05/2026. 
+
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/rafdesouza/whos-in-charge-agentic-ai)
 
