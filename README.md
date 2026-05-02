@@ -132,7 +132,7 @@ Before building your next agentic system:
 
 ## About
 
-**Rafael Souza** — AI Solution Architect, Accenture / Avanade
+**Rafael Souza** — AI Solution Architect
 
 Background in physics, flow modelling, and geophysics — pivoted into AI solutioning
 and delivery. Works on agentic AI design, human-AI teaming, and responsible AI
