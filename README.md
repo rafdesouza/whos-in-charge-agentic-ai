@@ -192,47 +192,80 @@ To stop the app, press `Ctrl + C` in the terminal.
 **What you need:** A GitHub account. That's it.
 No Python, no pip, no local ports — the environment runs entirely in the cloud.
 
-Click the button above — or follow the steps below if you prefer the terminal.
-
 **Step 1 — Create the Codespace**
 
-```bash
-gh codespace create --repo rafdesouza/whos-in-charge-agentic-ai
+Click the **Open in GitHub Codespaces** button above.
+
+You will land on a GitHub page titled *"Create a new codespace"*.
+Leave all settings as default and click the green **Create codespace** button.
+
+GitHub now builds your cloud environment. This takes about 60 seconds the first time.
+You will see a loading screen — wait for it to complete.
+
+> Prefer the terminal? Run this instead and skip to Step 3:
+> ```bash
+> gh codespace create --repo rafdesouza/whos-in-charge-agentic-ai
+> ```
+
+**Step 2 — Wait for setup to finish**
+
+Once the environment loads, you are inside a VS Code editor running in your browser.
+
+At the bottom of the screen you will see a terminal panel running a setup command:
+
+```
+Running postCreateCommand: pip install -r requirements.txt...
 ```
 
-GitHub spins up a cloud machine pre-configured with Python 3.11.
-You will be prompted to choose a machine type — the default (2-core) is fine.
-The Codespace name is printed when it's ready (e.g. `fuzzy-space-potato-abc123`).
+Wait for this to complete — it installs all dependencies automatically.
+You will know it is done when the terminal shows a standard prompt again:
 
-**Step 2 — Open it in VS Code**
-
-```bash
-gh codespace code
+```
+@your-username ➜ /workspaces/whos-in-charge-agentic-ai $
 ```
 
-If you have VS Code installed, it opens automatically connected to the Codespace.
-If not, add `--web` to open it in the browser:
+**Step 3 — Open the terminal**
 
-```bash
-gh codespace code --web
-```
+If the terminal panel is not visible, open it with:
 
-**Step 3 — Run the app**
+- **Menu:** Terminal → New Terminal
+- **Keyboard:** `` Ctrl + ` `` (backtick)
 
-In the VS Code terminal (`` Ctrl + ` `` to open it), type:
+**Step 4 — Run the app**
+
+In the terminal, type:
 
 ```bash
 streamlit run app.py --server.headless true
 ```
 
-VS Code detects port 8501 and shows a pop-up: **"Open in Browser"** — click it.
-The app opens in your browser. Done.
+Press **Enter**. You will see output like:
 
-**Step 4 — Clean up when finished**
+```
+You can now view your Streamlit app in your browser.
+Network URL: http://...
+```
+
+**Step 5 — Open the app in your browser**
+
+A pop-up will appear in the bottom-right corner of VS Code:
+
+> *"Your application running on port 8501 is available."*  → **Open in Browser**
+
+Click **Open in Browser**. The demo app opens in a new browser tab.
+
+If you miss the pop-up, click the **Ports** tab at the bottom of VS Code,
+find port `8501`, and click the globe icon to open it.
+
+**Step 6 — Clean up when finished**
+
+Close the browser tab and delete the Codespace to avoid using free quota:
 
 ```bash
 gh codespace delete
 ```
+
+Or go to [github.com/codespaces](https://github.com/codespaces), find your Codespace, and click **Delete**.
 
 ---
 
