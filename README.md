@@ -45,9 +45,73 @@ Three ways to get started — pick the one that fits your setup.
 
 ---
 
+### Prerequisites
+
+Install these before starting. The table shows which options need each one.
+
+| Prerequisite | Option 1 | Option 2 | Option 3 | Download |
+|---|:---:|:---:|:---:|---|
+| **GitHub account** (free) | ✓ | ✓ | ✓ | [github.com/signup](https://github.com/signup) |
+| **GitHub CLI** (`gh`) | ✓ | ✓ | ✓ | [cli.github.com](https://cli.github.com) |
+| **Python 3.10+** | ✓ | — | ✓ | [python.org/downloads](https://www.python.org/downloads) |
+| **Git** | ✓ | — | ✓ | [git-scm.com](https://git-scm.com/downloads) |
+| **VS Code** (optional) | — | ✓ | — | [code.visualstudio.com](https://code.visualstudio.com) |
+
+> Option 2 (Codespaces) runs entirely in the cloud — no Python or Git needed locally.
+> VS Code is optional; the Codespace can also open in the browser.
+
+**Install GitHub CLI**
+
+Open a terminal (PowerShell on Windows, Terminal on macOS/Linux):
+
+```bash
+# Windows
+winget install --id GitHub.cli
+
+# macOS
+brew install gh
+
+# Linux (Debian/Ubuntu)
+sudo apt install gh
+```
+
+Close and reopen the terminal after installing, then verify:
+
+```bash
+gh --version
+# expected: gh version 2.x.x
+```
+
+**Install Python** (Option 1 and 3 only)
+
+Download the installer from [python.org/downloads](https://www.python.org/downloads).
+On Windows, check **"Add Python to PATH"** during installation.
+
+Verify:
+
+```bash
+python --version
+# expected: Python 3.10.x or higher
+```
+
+**Install Git** (Option 1 and 3 only)
+
+Download from [git-scm.com](https://git-scm.com/downloads) and run the installer.
+
+Verify:
+
+```bash
+git --version
+# expected: git version 2.x.x
+```
+
+Once all prerequisites are in place, pick your option below.
+
+---
+
 ### Option 1 — Clone and run locally
 
-**What you need:** Python 3.10+, Git, GitHub CLI, a terminal.
+**What you need:** Python 3.10+, Git, GitHub CLI — all installed above.
 
 **Step 1 — Install the GitHub CLI**
 
