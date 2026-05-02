@@ -39,37 +39,71 @@ The core mechanism is **confidence scoring**: the agent knows what it doesn't kn
 
 ---
 
-## Setup
+## Run the Demo
+
+Three ways to get started — pick the one that fits your setup.
+
+### Option 1 — Clone and run locally
 
 ```bash
-git clone https://github.com/rafdesouza/whos-in-charge-agentic-ai.git
+# Install the GitHub CLI if you don't have it
+winget install --id GitHub.cli      # Windows
+brew install gh                      # macOS
+
+gh auth login
+gh repo clone rafdesouza/whos-in-charge-agentic-ai
 cd whos-in-charge-agentic-ai
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Runs immediately in **demo mode** — pre-computed decisions, no credentials needed.
+Open `http://localhost:8501`. Runs immediately in **demo mode** — no credentials needed.
 
-### Backends
+### Option 2 — GitHub Codespaces (zero local setup)
 
-| Mode | How to enable |
-|---|---|
-| **Demo** (default) | Nothing — just run |
-| **Ollama** (local, offline) | `LOCAL_MODEL=llama3.2` in `.env` — requires [ollama.com](https://ollama.com) |
-| **Azure OpenAI** (cloud) | Azure credentials in `.env` — see `.env.example` |
+No Python, no pip, no ports. Runs entirely in your browser.
 
 ```bash
-cp .env.example .env   # fill in your values
+gh auth login
+gh codespace create --repo rafdesouza/whos-in-charge-agentic-ai
+gh codespace code
 ```
 
-**Recommended Ollama models:**
+Inside the Codespace terminal — dependencies are already installed:
 
-| Model | Size | Notes |
-|---|---|---|
-| `llama3.2` | 2 GB | Fastest, runs on any laptop |
-| `mistral` | 4 GB | Most reliable structured output |
-| `qwen2.5:7b` | 5 GB | Strong reasoning |
-| `phi4` | 9 GB | Best quality — Microsoft model |
+```bash
+streamlit run app.py --server.headless true
+```
+
+Port 8501 is forwarded and opens in your browser automatically.
+
+### Option 3 — Fork and adapt to your own domain
+
+```bash
+gh repo fork rafdesouza/whos-in-charge-agentic-ai --clone
+cd whos-in-charge-agentic-ai
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Then edit `agent/events.py` to swap in your own domain events, and update the
+`SYSTEM_PROMPT` in `agent/building_agent.py` to match your environment.
+The confidence scoring logic works unchanged across any domain.
+
+### Live AI model (optional)
+
+The demo runs on pre-computed decisions by default. To connect a live model:
+
+```bash
+cp .env.example .env   # then fill in your values
+```
+
+| Mode | `.env` setting |
+|---|---|
+| **Ollama** (local, offline) | `LOCAL_MODEL=llama3.2` — requires [ollama.com](https://ollama.com) |
+| **Azure OpenAI** (cloud) | `AZURE_OPENAI_ENDPOINT` + `AZURE_OPENAI_API_KEY` |
+
+Recommended Ollama models: `llama3.2` (2 GB, fastest), `mistral` (4 GB, best structured output), `phi4` (9 GB, best quality).
 
 ---
 
@@ -125,7 +159,7 @@ Before building your next agentic system:
 
 ## Documentation
 
-- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — Three ways to run the demo: local clone, GitHub Codespaces, and fork to customise
+- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — Full setup guide with troubleshooting
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — LangChain LCEL chain, structured output, confidence scoring design, extending the demo, production considerations
 - [`docs/FUNCTIONAL_DESIGN.md`](docs/FUNCTIONAL_DESIGN.md) — Component-by-component functional design with team skill profiles mapped to each part of the system
 
