@@ -125,6 +125,7 @@ Before building your next agentic system:
 
 ## Documentation
 
+- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — Three ways to run the demo: local clone, GitHub Codespaces, and fork to customise
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — LangChain LCEL chain, structured output, confidence scoring design, extending the demo, production considerations
 - [`docs/FUNCTIONAL_DESIGN.md`](docs/FUNCTIONAL_DESIGN.md) — Component-by-component functional design with team skill profiles mapped to each part of the system
 
